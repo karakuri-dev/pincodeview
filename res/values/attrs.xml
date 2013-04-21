@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="pinCodeViewStyle" format="reference" />
+
+    <declare-styleable name="PinCodeView">
+
+        <!-- the length of the pin -->
+        <attr name="pinLength" format="integer" />
+        <!-- drawable to use for empty pin squares -->
+        <attr name="emptyDrawable" format="reference|color" />
+        <!-- drawable to use for filled pin squares -->
+        <attr name="filledDrawable" format="reference|color" />
+        <!-- drawable to use for the background of the pin indicators -->
+        <attr name="pinIndicatorBackground" format="reference|color" />
+        <!-- the type of characters to accept -->
+        <attr name="inputType">
+            <enum name="text" value="1" />
+            <enum name="number" value="2" />
+        </attr>
+        <attr name="android:imeOptions" />
+        <attr name="android:imeActionLabel" />
+        <attr name="android:imeActionId" />
+    </declare-styleable>
+
+</resources>
