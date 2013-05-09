@@ -2,9 +2,11 @@ package com.karakuri.lib.pincodeview;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.text.method.KeyListener;
 import android.util.AttributeSet;
@@ -19,11 +21,24 @@ import android.widget.TextView;
 /**
  * A widget for displaying a pin code entry field.
  */
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class PinCodeView extends LinearLayout {
 	private static final String TAG = "PinCodeView";
 
+	private static final int DEFAULT_PIN_LENGTH = 4;
+	private static final int IME_FLAG_NO_FULLSCREEN = 0x2000000; // EditorInfo.IME_FLAG_NO_FULLSCREEN
+
+	/* values matching enum for R.styleable.PinCodeView_inputType */
+	public static final int INPUT_TYPE_TEXT = EditorInfo.TYPE_CLASS_TEXT; // 0x1
+	public static final int INPUT_TYPE_NUMBER = EditorInfo.TYPE_CLASS_NUMBER; // 0x2
+
 	private TextView mPinText;
 	private int mPinLength;
+
+	private int mInputType;
+	private int mImeOptions;
+	private int mImeActionId;
+	private CharSequence mImeActionLabel;
 
 	public PinCodeView(Context context) {
 		super(context);
@@ -42,9 +57,45 @@ public class PinCodeView extends LinearLayout {
 
 	private void init(Context context, AttributeSet attrs, int defStyle) {
 		Log.d(TAG, "[init]");
+
+		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PinCodeView, defStyle, 0);
+		try {
+			final int N = a.getIndexCount();
+			for (int i = 0; i < N; i++) {
+				int attr = a.getIndex(i);
+
+				switch (attr) {
+				case R.styleable.PinCodeView_pinLength:
+					mPinLength = a.getInt(attr, DEFAULT_PIN_LENGTH);
+					break;
+				case R.styleable.PinCodeView_inputType:
+					mInputType = a.getInt(attr, EditorInfo.TYPE_CLASS_NUMBER);
+					break;
+				case R.styleable.PinCodeView_android_imeOptions:
+					mImeOptions = a.getInt(attr, EditorInfo.IME_ACTION_UNSPECIFIED);
+					break;
+				case R.styleable.PinCodeView_android_imeActionLabel:
+					mImeActionLabel = a.getText(attr);
+					break;
+				case R.styleable.PinCodeView_android_imeActionId:
+					mImeActionId = a.getInt(attr, 0);
+					break;
+				}
+			}
+		} finally {
+			a.recycle();
+		}
+
+		// prevent the IME from going full screen in landscape
+		mImeOptions |= IME_FLAG_NO_FULLSCREEN;
+
 		mPinText = new TextView(context);
-		mPinText.setInputType(EditorInfo.TYPE_CLASS_NUMBER); // temp
 		mPinText.addTextChangedListener(mPinTextWatcher);
+
+		mPinText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(mPinLength) }); // temp
+		mPinText.setInputType(mInputType); // temp
+		mPinText.setImeOptions(mImeOptions); // temp
+		mPinText.setImeActionLabel(mImeActionLabel, mImeActionId); // temp
 
 		setClickable(true);
 		setFocusableInTouchMode(true);
@@ -60,7 +111,7 @@ public class PinCodeView extends LinearLayout {
 
 		@Override
 		public void afterTextChanged(Editable s) {
-			Log.d(TAG, "[afterTextChanged] s = " + s);
+			Log.d(TAG, String.format("[afterTextChanged] s = \"%s\"", s));
 		}
 	};
 
@@ -70,6 +121,10 @@ public class PinCodeView extends LinearLayout {
 
 	public int getPinLength() {
 		return mPinLength;
+	}
+
+	public CharSequence getPin() {
+		return mPinText.getText();
 	}
 
 	@Override
@@ -99,8 +154,10 @@ public class PinCodeView extends LinearLayout {
 
 		PinCodeInputConnection connection = new PinCodeInputConnection(this);
 
-		outAttrs.inputType = EditorInfo.TYPE_CLASS_NUMBER; // temp
-		outAttrs.imeOptions = EditorInfo.IME_ACTION_UNSPECIFIED; // temp
+		outAttrs.inputType = mInputType;
+		outAttrs.imeOptions = mImeOptions;
+		outAttrs.actionLabel = mImeActionLabel;
+		outAttrs.actionId = mImeActionId;
 
 		return connection;
 	}
