@@ -21,12 +21,10 @@ import android.widget.TextView;
 /**
  * A widget for displaying a pin code entry field.
  */
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class PinCodeView extends LinearLayout {
 	private static final String TAG = "PinCodeView";
 
 	private static final int DEFAULT_PIN_LENGTH = 4;
-	private static final int IME_FLAG_NO_FULLSCREEN = 0x2000000; // EditorInfo.IME_FLAG_NO_FULLSCREEN
 
 	/* values matching enum for R.styleable.PinCodeView_inputType */
 	public static final int INPUT_TYPE_TEXT = EditorInfo.TYPE_CLASS_TEXT; // 0x1
@@ -86,16 +84,17 @@ public class PinCodeView extends LinearLayout {
 			a.recycle();
 		}
 
-		// prevent the IME from going full screen in landscape
-		mImeOptions |= IME_FLAG_NO_FULLSCREEN;
+		// try to prevent the IME from going full screen in landscape
+		mImeOptions |= EditorInfo.IME_FLAG_NO_FULLSCREEN;
 
 		mPinText = new TextView(context);
 		mPinText.addTextChangedListener(mPinTextWatcher);
 
 		mPinText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(mPinLength) }); // temp
-		mPinText.setInputType(mInputType); // temp
 		mPinText.setImeOptions(mImeOptions); // temp
 		mPinText.setImeActionLabel(mImeActionLabel, mImeActionId); // temp
+
+		setInputType(mInputType);
 
 		setClickable(true);
 		setFocusableInTouchMode(true);
@@ -127,11 +126,57 @@ public class PinCodeView extends LinearLayout {
 		return mPinText.getText();
 	}
 
+	public void setInputType(int inputType) {
+		switch (inputType) {
+		case EditorInfo.TYPE_CLASS_TEXT:
+			mInputType =
+					EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
+							| EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+			break;
+		case EditorInfo.TYPE_CLASS_NUMBER:
+			mInputType = EditorInfo.TYPE_CLASS_NUMBER | EditorInfo.TYPE_NUMBER_VARIATION_PASSWORD;
+			break;
+		default:
+			throw new IllegalArgumentException("inputType must be either "
+					+ "EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_CLASS_NUMBER");
+		}
+
+		mPinText.setInputType(mInputType);
+
+		InputMethodManager imm =
+				(InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		if (imm != null) imm.restartInput(this);
+	}
+
+	public int getInputType() {
+		return mInputType;
+	}
+
+	public void setImeOptions(int options) {
+
+	}
+
+	public int getImeOptions() {
+		return mImeOptions;
+	}
+
+	public void setImeActionLabel(CharSequence label, int actionId) {
+
+	}
+
+	public CharSequence getImeActionLabel() {
+		return mImeActionLabel;
+	}
+
+	public int getImeActionId() {
+		return mImeActionId;
+	}
+
 	@Override
 	public boolean performClick() {
 		Log.d(TAG, "[performClick]");
-		InputMethodManager imm = (InputMethodManager) getContext().getSystemService(
-				Context.INPUT_METHOD_SERVICE);
+		InputMethodManager imm =
+				(InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 		if (imm != null) {
 			imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
 		}
