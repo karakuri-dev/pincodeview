@@ -1,5 +1,7 @@
 package com.karakuri.lib.pincodeview;
 
+import com.karakuri.lib.pincodeview.PinKeyListener.Type;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -27,8 +29,9 @@ public class PinCodeView extends LinearLayout {
 	private static final int DEFAULT_PIN_LENGTH = 4;
 
 	/* values matching enum for R.styleable.PinCodeView_inputType */
-	public static final int INPUT_TYPE_TEXT = EditorInfo.TYPE_CLASS_TEXT; // 0x1
-	public static final int INPUT_TYPE_NUMBER = EditorInfo.TYPE_CLASS_NUMBER; // 0x2
+	public static final int INPUT_TYPE_NUMERIC = 1;
+	public static final int INPUT_TYPE_ALPHA = 2;
+	public static final int INPUT_TYPE_ALPHA_NUMERIC = 3;
 
 	private TextView mPinText;
 	private int mPinLength;
@@ -67,7 +70,7 @@ public class PinCodeView extends LinearLayout {
 					mPinLength = a.getInt(attr, DEFAULT_PIN_LENGTH);
 					break;
 				case R.styleable.PinCodeView_inputType:
-					mInputType = a.getInt(attr, EditorInfo.TYPE_CLASS_NUMBER);
+					mInputType = a.getInt(attr, INPUT_TYPE_NUMERIC);
 					break;
 				case R.styleable.PinCodeView_android_imeOptions:
 					mImeOptions = a.getInt(attr, EditorInfo.IME_ACTION_UNSPECIFIED);
@@ -127,21 +130,24 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	public void setInputType(int inputType) {
+		PinKeyListener input;
 		switch (inputType) {
-		case EditorInfo.TYPE_CLASS_TEXT:
-			mInputType =
-					EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
-							| EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+		case INPUT_TYPE_NUMERIC:
+			input = PinKeyListener.getInstance(Type.NUMERIC);
 			break;
-		case EditorInfo.TYPE_CLASS_NUMBER:
-			mInputType = EditorInfo.TYPE_CLASS_NUMBER | EditorInfo.TYPE_NUMBER_VARIATION_PASSWORD;
+		case INPUT_TYPE_ALPHA:
+			input = PinKeyListener.getInstance(Type.ALPHA);
+			break;
+		case INPUT_TYPE_ALPHA_NUMERIC:
+			input = PinKeyListener.getInstance(Type.ALPHA_NUMERIC);
 			break;
 		default:
-			throw new IllegalArgumentException("inputType must be either "
-					+ "EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_CLASS_NUMBER");
+			throw new IllegalArgumentException("inputType must be one of "
+					+ "INPUT_TYPE_NUMERIC, INPUT_TYPE_ALPHA, or INPUT_TYPE_ALPHA_NUMERIC");
 		}
 
-		mPinText.setInputType(mInputType);
+		mInputType = input.getInputType();
+		mPinText.setKeyListener(input);
 
 		InputMethodManager imm =
 				(InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);

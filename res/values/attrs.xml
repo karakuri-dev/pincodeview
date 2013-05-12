@@ -15,8 +15,9 @@
         <attr name="pinIndicatorBackground" format="reference|color" />
         <!-- the type of characters to accept -->
         <attr name="inputType">
-            <enum name="text" value="1" />
-            <enum name="number" value="2" />
+            <enum name="numeric" value="1" />
+            <enum name="alpha" value="2" />
+            <enum name="alphaNumeric" value="3" />
         </attr>
         <attr name="android:imeOptions" />
         <attr name="android:imeActionLabel" />
