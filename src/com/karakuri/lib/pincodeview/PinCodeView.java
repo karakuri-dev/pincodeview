@@ -38,7 +38,7 @@ public class PinCodeView extends LinearLayout {
 	public static final int INPUT_TYPE_ALPHA_NUMERIC = 3;
 
 	private TextView mPinText;
-	private int mPinLength;
+	private int mMaxPinLength;
 
 	private int mInputType;
 	private int mImeOptions;
@@ -62,7 +62,9 @@ public class PinCodeView extends LinearLayout {
 
 	private void init(Context context, AttributeSet attrs, int defStyle) {
 		Log.d(TAG, "[init]");
-
+		
+		int maxPinLength = DEFAULT_PIN_LENGTH;
+		
 		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PinCodeView, defStyle, 0);
 		try {
 			final int N = a.getIndexCount();
@@ -71,13 +73,13 @@ public class PinCodeView extends LinearLayout {
 
 				switch (attr) {
 				case R.styleable.PinCodeView_pinLength:
-					mPinLength = a.getInt(attr, DEFAULT_PIN_LENGTH);
+					maxPinLength = a.getInt(attr, maxPinLength);
 					break;
 				case R.styleable.PinCodeView_inputType:
 					mInputType = a.getInt(attr, INPUT_TYPE_NUMERIC);
 					break;
 				case R.styleable.PinCodeView_android_imeOptions:
-					mImeOptions = a.getInt(attr, EditorInfo.IME_ACTION_UNSPECIFIED);
+					mImeOptions = a.getInt(attr, mImeOptions);
 					break;
 				case R.styleable.PinCodeView_android_imeActionLabel:
 					mImeActionLabel = a.getText(attr);
@@ -91,16 +93,11 @@ public class PinCodeView extends LinearLayout {
 			a.recycle();
 		}
 
-		// try to prevent the IME from going full screen in landscape
-		mImeOptions |= EditorInfo.IME_FLAG_NO_FULLSCREEN;
-
 		mPinText = new TextView(context);
 		mPinText.addTextChangedListener(mPinTextWatcher);
 
-		mPinText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(mPinLength) }); // temp
-		mPinText.setImeOptions(mImeOptions); // temp
-		mPinText.setImeActionLabel(mImeActionLabel, mImeActionId); // temp
-
+		setMaxPinLength(maxPinLength);
+		setImeOptions(mImeOptions);
 		setInputType(mInputType);
 
 		setClickable(true);
@@ -121,12 +118,21 @@ public class PinCodeView extends LinearLayout {
 		}
 	};
 
-	public void setPinLength(int newLength) {
-		mPinLength = newLength;
+	public void setMaxPinLength(int newLength) {
+		if (mMaxPinLength != newLength) {
+			mMaxPinLength = newLength;			
+			mPinText.setFilters(new InputFilter[] { new InputFilter.LengthFilter(newLength) });
+			
+			CharSequence text = mPinText.getText();
+			if (text != null && text.length() > newLength) {
+				mPinText.setText(text.subSequence(0, newLength));
+				Selection.setSelection(mPinText.getEditableText(), newLength);
+			}
+		}
 	}
 
-	public int getPinLength() {
-		return mPinLength;
+	public int getMaxPinLength() {
+		return mMaxPinLength;
 	}
 
 	public CharSequence getPin() {
@@ -163,7 +169,8 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	public void setImeOptions(int options) {
-
+		// try to prevent the IME from going full screen in landscape
+		mImeOptions = options |= EditorInfo.IME_FLAG_NO_FULLSCREEN;
 	}
 
 	public int getImeOptions() {
