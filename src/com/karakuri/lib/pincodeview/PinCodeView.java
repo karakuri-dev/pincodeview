@@ -1,14 +1,16 @@
 package com.karakuri.lib.pincodeview;
 
-import com.karakuri.lib.pincodeview.PinKeyListener.Type;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.Selection;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.KeyListener;
 import android.util.AttributeSet;
@@ -19,6 +21,8 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.karakuri.lib.pincodeview.PinKeyListener.Type;
 
 /**
  * A widget for displaying a pin code entry field.
@@ -263,5 +267,68 @@ public class PinCodeView extends LinearLayout {
 	public boolean onKeyShortcut(int keyCode, KeyEvent event) {
 		Log.d(TAG, "[onKeyShortcut]");
 		return mPinText.onKeyShortcut(keyCode, event);
+	}
+
+	@Override
+	protected Parcelable onSaveInstanceState() {
+		Log.d(TAG, "[onSaveInstanceState]");
+		Parcelable superState = super.onSaveInstanceState();
+		
+		CharSequence text = mPinText.getText();
+		if (!TextUtils.isEmpty(text)) {
+			SavedState ss = new SavedState(superState);
+			ss.text = text;
+			return ss;
+		}
+		
+		return superState;
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Parcelable state) {
+		Log.d(TAG, "[onRestoreInstanceState]");
+		if (!(state instanceof SavedState)) {
+			super.onRestoreInstanceState(state);
+			return;
+		}
+
+		SavedState ss = (SavedState) state;
+		super.onRestoreInstanceState(ss.getSuperState());
+		
+		if (ss.text != null) {
+			mPinText.setText(ss.text);
+			Selection.setSelection(mPinText.getEditableText(), ss.text.length());
+        }
+	}
+	
+	public static class SavedState extends BaseSavedState {
+		private CharSequence text;
+		
+		public SavedState(Parcelable superState) {
+			super(superState);
+		}
+
+		private SavedState(Parcel source) {
+			super(source);
+			text = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(source);
+		}
+		
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			Log.d(TAG, "[writeToParcel]");
+			super.writeToParcel(dest, flags);
+			TextUtils.writeToParcel(text, dest, flags);
+		}
+		
+		public static final Parcelable.Creator<SavedState> CREATOR =
+				new Parcelable.Creator<SavedState>() {
+			public SavedState createFromParcel(Parcel in) {
+				return new SavedState(in);
+			}
+
+			public SavedState[] newArray(int size) {
+				return new SavedState[size];
+			}
+		};
 	}
 }
