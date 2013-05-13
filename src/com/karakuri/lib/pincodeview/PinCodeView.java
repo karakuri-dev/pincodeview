@@ -57,12 +57,13 @@ public class PinCodeView extends LinearLayout {
 		 * 
 		 * @param view
 		 *            The view for which the editor action was invoked
-		 * @param actionCode
+		 * @param actionId
 		 *            Identifier of the action. This will be either the identifier you supplied, or
-		 *            EditorInfo.IME_NULL if being called due to the enter key being pressed.
+		 *            {@link EditorInfo#IME_NULL EditorInfo.IME_NULL} if being called due to the
+		 *            enter key being pressed.
 		 * @return Return true if you have consumed the action, else return false
 		 */
-		public boolean onEditorAction(PinCodeView view, int actionCode);
+		public boolean onEditorAction(PinCodeView view, int actionId);
 	}
 
 	public PinCodeView(Context context) {
@@ -208,7 +209,7 @@ public class PinCodeView extends LinearLayout {
 	public int getImeActionId() {
 		return mImeActionId;
 	}
-	
+
 	public void setOnEditorActionListener(OnEditorActionListener listener) {
 		mOnEditorActionListener = listener;
 	}
@@ -266,18 +267,18 @@ public class PinCodeView extends LinearLayout {
 		return connection;
 	}
 
-	public void onEditorAction(int actionCode) {
+	public void onEditorAction(int actionId) {
 		Log.d(TAG, "[onEditorAction]");
-		mPinText.onEditorAction(actionCode);
+		mPinText.onEditorAction(actionId);
 
 		if (mOnEditorActionListener != null) {
-			if (mOnEditorActionListener.onEditorAction(this, actionCode)) {
+			if (mOnEditorActionListener.onEditorAction(this, actionId)) {
 				return;
 			}
 		}
 
 		// Default handling for some standard actions
-		if (actionCode == EditorInfo.IME_ACTION_NEXT) {
+		if (actionId == EditorInfo.IME_ACTION_NEXT) {
 			View v = focusSearch(FOCUS_FORWARD);
 			if (v != null) {
 				if (!v.requestFocus(FOCUS_FORWARD)) {
@@ -287,7 +288,7 @@ public class PinCodeView extends LinearLayout {
 			}
 			return;
 
-		} else if (actionCode == EditorInfo.IME_ACTION_PREVIOUS) {
+		} else if (actionId == EditorInfo.IME_ACTION_PREVIOUS) {
 			View v = focusSearch(FOCUS_BACKWARD);
 			if (v != null) {
 				if (!v.requestFocus(FOCUS_BACKWARD)) {
@@ -297,7 +298,7 @@ public class PinCodeView extends LinearLayout {
 			}
 			return;
 
-		} else if (actionCode == EditorInfo.IME_ACTION_DONE) {
+		} else if (actionId == EditorInfo.IME_ACTION_DONE) {
 			InputMethodManager imm =
 					(InputMethodManager) getContext()
 						.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -308,7 +309,7 @@ public class PinCodeView extends LinearLayout {
 		}
 
 		// unhandled action; pass it to the TextView
-		mPinText.onEditorAction(actionCode);
+		mPinText.onEditorAction(actionId);
 	}
 
 	public void onPrivateIMECommand(String action, Bundle data) {
