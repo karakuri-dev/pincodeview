@@ -61,9 +61,11 @@ public class PinCodeView extends LinearLayout {
 		 *            Identifier of the action. This will be either the identifier you supplied, or
 		 *            {@link EditorInfo#IME_NULL EditorInfo.IME_NULL} if being called due to the
 		 *            enter key being pressed.
+		 * @param event
+		 *            If triggered by an enter key, this is the event; otherwise, this is null.
 		 * @return Return true if you have consumed the action, else return false
 		 */
-		public boolean onEditorAction(PinCodeView view, int actionId);
+		public boolean onEditorAction(PinCodeView view, int actionId, KeyEvent event);
 	}
 
 	public PinCodeView(Context context) {
@@ -173,15 +175,15 @@ public class PinCodeView extends LinearLayout {
 			input = PinKeyListener.getInstance(Type.ALPHA_NUMERIC);
 			break;
 		default:
-			throw new IllegalArgumentException("inputType must be one of "
-					+ "INPUT_TYPE_NUMERIC, INPUT_TYPE_ALPHA, or INPUT_TYPE_ALPHA_NUMERIC");
+			throw new IllegalArgumentException("inputType must be one of INPUT_TYPE_NUMERIC,"
+					+ "INPUT_TYPE_ALPHA, or INPUT_TYPE_ALPHA_NUMERIC");
 		}
 
 		mInputType = input.getInputType();
 		mPinText.setKeyListener(input);
 
-		InputMethodManager imm =
-				(InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		InputMethodManager imm = (InputMethodManager) getContext().getSystemService(
+				Context.INPUT_METHOD_SERVICE);
 		if (imm != null) imm.restartInput(this);
 	}
 
@@ -199,7 +201,8 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	public void setImeActionLabel(CharSequence label, int actionId) {
-
+		mImeActionLabel = label;
+		mImeActionId = actionId;
 	}
 
 	public CharSequence getImeActionLabel() {
@@ -217,12 +220,15 @@ public class PinCodeView extends LinearLayout {
 	@Override
 	public boolean performClick() {
 		Log.d(TAG, "[performClick]");
-		InputMethodManager imm =
-				(InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		InputMethodManager imm = getInputMethodManager();
 		if (imm != null) {
 			imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
 		}
 		return super.performClick();
+	}
+
+	private InputMethodManager getInputMethodManager() {
+		return (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 	}
 
 	@Override
@@ -252,7 +258,9 @@ public class PinCodeView extends LinearLayout {
 		if (focusSearch(FOCUS_UP) != null) {
 			outAttrs.imeOptions |= EditorInfo.IME_FLAG_NAVIGATE_PREVIOUS;
 		}
-		if ((outAttrs.imeOptions & EditorInfo.IME_MASK_ACTION) == EditorInfo.IME_ACTION_UNSPECIFIED) {
+		// @formatter:off
+		if ((outAttrs.imeOptions & EditorInfo.IME_MASK_ACTION) 
+				== EditorInfo.IME_ACTION_UNSPECIFIED) {
 			if ((outAttrs.imeOptions & EditorInfo.IME_FLAG_NAVIGATE_NEXT) != 0) {
 				// An action has not been set, but the enter key will move to the next focus, so set
 				// the editor action to that.
@@ -262,6 +270,7 @@ public class PinCodeView extends LinearLayout {
 				outAttrs.imeOptions |= EditorInfo.IME_ACTION_DONE;
 			}
 		}
+		// @formatter:on
 
 		PinCodeInputConnection connection = new PinCodeInputConnection(this);
 		return connection;
@@ -272,7 +281,7 @@ public class PinCodeView extends LinearLayout {
 		mPinText.onEditorAction(actionId);
 
 		if (mOnEditorActionListener != null) {
-			if (mOnEditorActionListener.onEditorAction(this, actionId)) {
+			if (mOnEditorActionListener.onEditorAction(this, actionId, null)) {
 				return;
 			}
 		}
@@ -299,9 +308,7 @@ public class PinCodeView extends LinearLayout {
 			return;
 
 		} else if (actionId == EditorInfo.IME_ACTION_DONE) {
-			InputMethodManager imm =
-					(InputMethodManager) getContext()
-						.getSystemService(Context.INPUT_METHOD_SERVICE);
+			InputMethodManager imm = getInputMethodManager();
 			if (imm != null && imm.isActive(this)) {
 				imm.hideSoftInputFromWindow(getWindowToken(), 0);
 			}
@@ -410,15 +417,17 @@ public class PinCodeView extends LinearLayout {
 			TextUtils.writeToParcel(text, dest, flags);
 		}
 
+		// @formatter:off
 		public static final Parcelable.Creator<SavedState> CREATOR =
 				new Parcelable.Creator<SavedState>() {
-					public SavedState createFromParcel(Parcel in) {
-						return new SavedState(in);
-					}
+			public SavedState createFromParcel(Parcel in) {
+				return new SavedState(in);
+			}
 
-					public SavedState[] newArray(int size) {
-						return new SavedState[size];
-					}
-				};
+			public SavedState[] newArray(int size) {
+				return new SavedState[size];
+			}
+		};
+		// @formatter:on
 	}
 }
