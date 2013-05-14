@@ -196,8 +196,9 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	public void setImeOptions(int options) {
-		// try to prevent the IME from going full screen in landscape
-		mImeOptions = options |= EditorInfo.IME_FLAG_NO_FULLSCREEN;
+		// try to prevent the IME from hiding the view in landscape
+		options = options | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
+		mImeOptions = options;
 	}
 
 	public int getImeOptions() {
