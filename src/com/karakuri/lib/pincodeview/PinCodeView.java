@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Selection;
@@ -15,6 +16,7 @@ import android.text.TextWatcher;
 import android.text.method.KeyListener;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -45,8 +47,10 @@ public class PinCodeView extends LinearLayout {
 	private int mImeOptions;
 	private int mImeActionId;
 	private CharSequence mImeActionLabel;
+	private boolean enterDown;
 
 	private OnEditorActionListener mOnEditorActionListener;
+	private OnClickListener mOnClickListener;
 
 	/**
 	 * Interface definition for a callback to be invoked when an action is performed on the editor.
@@ -217,16 +221,6 @@ public class PinCodeView extends LinearLayout {
 		mOnEditorActionListener = listener;
 	}
 
-	@Override
-	public boolean performClick() {
-		Log.d(TAG, "[performClick]");
-		InputMethodManager imm = getInputMethodManager();
-		if (imm != null) {
-			imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
-		}
-		return super.performClick();
-	}
-
 	private InputMethodManager getInputMethodManager() {
 		return (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 	}
@@ -244,6 +238,9 @@ public class PinCodeView extends LinearLayout {
 	@Override
 	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
 		Log.d(TAG, "[onCreateInputConnection]");
+		if (!isEnabled()) {
+			return null;
+		}
 
 		outAttrs.inputType = mInputType;
 		outAttrs.imeOptions = mImeOptions;
@@ -315,8 +312,18 @@ public class PinCodeView extends LinearLayout {
 			return;
 		}
 
-		// unhandled action; pass it to the TextView
-		mPinText.onEditorAction(actionId);
+		// unhandled action; dispatch Enter key
+		long eventTime = SystemClock.uptimeMillis();
+		int keyCharMap = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+				? KeyCharacterMap.VIRTUAL_KEYBOARD : 0;
+		// @formatter:off
+		dispatchKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN,
+				KeyEvent.KEYCODE_ENTER, 0, 0, keyCharMap, 0, KeyEvent.FLAG_SOFT_KEYBOARD
+				| KeyEvent.FLAG_KEEP_TOUCH_MODE | KeyEvent.FLAG_EDITOR_ACTION));
+		dispatchKeyEvent(new KeyEvent(SystemClock.uptimeMillis(), eventTime, KeyEvent.ACTION_UP,
+				KeyEvent.KEYCODE_ENTER, 0, 0, keyCharMap, 0, KeyEvent.FLAG_SOFT_KEYBOARD
+				| KeyEvent.FLAG_KEEP_TOUCH_MODE | KeyEvent.FLAG_EDITOR_ACTION));
+		// @formatter:on
 	}
 
 	public void onPrivateIMECommand(String action, Bundle data) {
@@ -330,15 +337,101 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		Log.d(TAG, "[onKeyDown]");
-		return mPinText.onKeyDown(keyCode, event);
+	public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+		Log.d(TAG, "[onKeyPreIme]");
+		if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+			return super.onKeyPreIme(keyCode, event);
+		}
+		return mPinText.onKeyPreIme(keyCode, event);
 	}
 
 	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		Log.d(TAG, "[onKeyDown]");
+		int which = doKeyDown(keyCode, event, null);
+		if (which == 0) {
+			// go through default dispatching
+			return super.onKeyDown(keyCode, event);
+		}
+		return true;
+	}
+
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		Log.d(TAG, "[onKeyUp]");
-		return mPinText.onKeyUp(keyCode, event);
+		if (!isEnabled()) {
+			return super.onKeyUp(keyCode, event);
+		}
+
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_DPAD_CENTER:
+			/*
+			 * If there is a click listener, just call through to super, which will invoke it. If
+			 * not, try to show the soft input method. (It will also call performClick(), but that
+			 * won't do anything in this case.)
+			 */
+			if (!hasOnClickListeners()) {
+				if (onCheckIsTextEditor()) {
+					InputMethodManager imm = getInputMethodManager();
+					if (imm != null) {
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+							imm.viewClicked(this);
+						}
+						imm.showSoftInput(this, 0);
+					}
+				}
+			}
+			return super.onKeyUp(keyCode, event);
+
+		case KeyEvent.KEYCODE_ENTER:
+			if (mOnEditorActionListener != null && enterDown) {
+				enterDown = false;
+				if (mOnEditorActionListener.onEditorAction(this, EditorInfo.IME_NULL, event)) {
+					return true;
+				}
+			}
+
+			if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 || true) {
+				/*
+				 * If there is a click listener, just call through to super, which will invoke it.
+				 * If not, try to advance focus, but still call through to super, which will reset
+				 * the pressed state and longpress state. (It will also call performClick(), but
+				 * that won't do anything in this case.)
+				 */
+				if (!hasOnClickListeners()) {
+					View v = focusSearch(FOCUS_DOWN);
+
+					if (v != null) {
+						if (!v.requestFocus(FOCUS_DOWN)) {
+							throw new IllegalStateException("focus search returned a view "
+									+ "that wasn't able to take focus!");
+						}
+
+						// Return true because we handled the key
+						// Super will return false because there was no click listener.
+						super.onKeyUp(keyCode, event);
+						return true;
+					} else if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0) {
+						// No target for next focus, but make sure the IME is hidden
+						// if this came from it.
+						InputMethodManager imm = getInputMethodManager();
+						if (imm != null && imm.isActive(this)) {
+							imm.hideSoftInputFromWindow(getWindowToken(), 0);
+						}
+					}
+				}
+			}
+			return super.onKeyUp(keyCode, event);
+		}
+
+		if (mPinText.getKeyListener() != null) {
+			if (mPinText.getKeyListener().onKeyUp(mPinText, mPinText.getEditableText(), keyCode,
+					event)) {
+				return true;
+			}
+		}
+		return super.onKeyUp(keyCode, event);
 	}
 
 	@TargetApi(Build.VERSION_CODES.ECLAIR)
@@ -351,19 +444,104 @@ public class PinCodeView extends LinearLayout {
 	@Override
 	public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
 		Log.d(TAG, "[onKeyMultiple]");
-		return mPinText.onKeyMultiple(keyCode, repeatCount, event);
-	}
+		KeyEvent down = KeyEvent.changeAction(event, KeyEvent.ACTION_DOWN);
 
-	@Override
-	public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-		Log.d(TAG, "[onKeyPreIme]");
-		return mPinText.onKeyPreIme(keyCode, event);
+		int which = doKeyDown(keyCode, down, event);
+		if (which == 0) {
+			// go through default dispatching
+			return super.onKeyMultiple(keyCode, repeatCount, event);
+		}
+		if (which == -1) {
+			return true; // consumed
+		}
+
+		repeatCount--;
+
+		// Dispatch the remaining events to the input method.
+		KeyEvent up = KeyEvent.changeAction(event, KeyEvent.ACTION_UP);
+		if (which == 1) {
+			// keyListener not null from doKeyDown
+			KeyListener keyListener = mPinText.getKeyListener();
+			Editable text = mPinText.getEditableText();
+
+			keyListener.onKeyUp(mPinText, text, keyCode, up);
+			while (--repeatCount > 0) {
+				keyListener.onKeyDown(mPinText, text, keyCode, down);
+				keyListener.onKeyUp(mPinText, text, keyCode, up);
+			}
+		}
+
+		return true;
 	}
 
 	@Override
 	public boolean onKeyShortcut(int keyCode, KeyEvent event) {
 		Log.d(TAG, "[onKeyShortcut]");
 		return mPinText.onKeyShortcut(keyCode, event);
+	}
+
+	/*
+	 * Helper for other key event callbacks.
+	 */
+	private int doKeyDown(int keyCode, KeyEvent event, KeyEvent otherEvent) {
+		if (!isEnabled()) {
+			return 0;
+		}
+
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_ENTER:
+			// If there is an action listener, given it a chance to consume the event.
+			if (mOnEditorActionListener != null
+					&& mOnEditorActionListener.onEditorAction(this, EditorInfo.IME_NULL, event)) {
+				enterDown = true;
+				return -1; // consumed
+			}
+
+			if (hasOnClickListeners()) {
+				return 0; // dispatch to super
+			}
+			return -1; // consumed
+
+		case KeyEvent.KEYCODE_DPAD_CENTER:
+			return 0; // dispatch to super
+
+		case KeyEvent.KEYCODE_TAB:
+			return 0; // dispatch to super
+		}
+
+		// key listener should always be non-null
+		KeyListener keyListener = mPinText.getKeyListener();
+		if (keyListener != null) {
+			boolean doDown = true;
+			if (otherEvent != null) {
+				mPinText.beginBatchEdit();
+				final boolean handled = keyListener.onKeyOther(mPinText,
+						mPinText.getEditableText(), otherEvent);
+				doDown = false;
+				mPinText.endBatchEdit();
+				if (handled) return -1; // consumed
+			}
+
+			if (doDown) {
+				mPinText.beginBatchEdit();
+				final boolean handled = keyListener.onKeyDown(mPinText, mPinText.getEditableText(),
+						keyCode, event);
+				mPinText.endBatchEdit();
+				if (handled) return 1; // edited text
+			}
+		}
+
+		return 0; // dispatch to super
+	}
+
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+	@Override
+	public boolean hasOnClickListeners() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+			return super.hasOnClickListeners();
+		} else {
+			return mOnClickListener != null;
+		}
 	}
 
 	@Override
