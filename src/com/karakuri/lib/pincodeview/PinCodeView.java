@@ -43,14 +43,19 @@ public class PinCodeView extends LinearLayout {
 	private TextView mPinText;
 	private int mMaxPinLength;
 
-	private int mInputType;
-	private int mImeOptions;
-	private int mImeActionId;
-	private CharSequence mImeActionLabel;
-	private boolean enterDown;
-
-	private OnEditorActionListener mOnEditorActionListener;
+	// for backwards compatible hasOnClickListeners
 	private OnClickListener mOnClickListener;
+
+	private InputContentInfo mInputContentInfo;
+
+	private static class InputContentInfo {
+		int inputType;
+		int imeOptions;
+		int imeActionId;
+		CharSequence imeActionLabel;
+		OnEditorActionListener onEditorActionListener;
+		boolean enterDown;
+	}
 
 	/**
 	 * Interface definition for a callback to be invoked when an action is performed on the editor.
@@ -89,8 +94,11 @@ public class PinCodeView extends LinearLayout {
 
 	private void init(Context context, AttributeSet attrs, int defStyle) {
 		Log.d(TAG, "[init]");
+		mInputContentInfo = new InputContentInfo();
 
 		int maxPinLength = DEFAULT_PIN_LENGTH;
+		int inputType = INPUT_TYPE_NUMERIC;
+		int imeOptions = EditorInfo.TYPE_NULL;
 
 		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PinCodeView, defStyle, 0);
 		try {
@@ -103,16 +111,16 @@ public class PinCodeView extends LinearLayout {
 					maxPinLength = a.getInt(attr, maxPinLength);
 					break;
 				case R.styleable.PinCodeView_inputType:
-					mInputType = a.getInt(attr, INPUT_TYPE_NUMERIC);
+					inputType = a.getInt(attr, inputType);
 					break;
 				case R.styleable.PinCodeView_android_imeOptions:
-					mImeOptions = a.getInt(attr, mImeOptions);
+					imeOptions = a.getInt(attr, imeOptions);
 					break;
 				case R.styleable.PinCodeView_android_imeActionLabel:
-					mImeActionLabel = a.getText(attr);
+					mInputContentInfo.imeActionLabel = a.getText(attr);
 					break;
 				case R.styleable.PinCodeView_android_imeActionId:
-					mImeActionId = a.getInt(attr, 0);
+					mInputContentInfo.imeActionId = a.getInt(attr, 0);
 					break;
 				}
 			}
@@ -124,8 +132,8 @@ public class PinCodeView extends LinearLayout {
 		mPinText.addTextChangedListener(mPinTextWatcher);
 
 		setMaxPinLength(maxPinLength);
-		setImeOptions(mImeOptions);
-		setInputType(mInputType);
+		setInputType(inputType);
+		setImeOptions(imeOptions);
 
 		setClickable(true);
 		setFocusableInTouchMode(true);
@@ -183,7 +191,7 @@ public class PinCodeView extends LinearLayout {
 					+ "INPUT_TYPE_ALPHA, or INPUT_TYPE_ALPHA_NUMERIC");
 		}
 
-		mInputType = input.getInputType();
+		mInputContentInfo.inputType = input.getInputType();
 		mPinText.setKeyListener(input);
 
 		InputMethodManager imm = (InputMethodManager) getContext().getSystemService(
@@ -192,34 +200,34 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	public int getInputType() {
-		return mInputType;
+		return mInputContentInfo.inputType;
 	}
 
 	public void setImeOptions(int options) {
 		// try to prevent the IME from hiding the view in landscape
 		options = options | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
-		mImeOptions = options;
+		mInputContentInfo.imeOptions = options;
 	}
 
 	public int getImeOptions() {
-		return mImeOptions;
+		return mInputContentInfo.imeOptions;
 	}
 
 	public void setImeActionLabel(CharSequence label, int actionId) {
-		mImeActionLabel = label;
-		mImeActionId = actionId;
+		mInputContentInfo.imeActionLabel = label;
+		mInputContentInfo.imeActionId = actionId;
 	}
 
 	public CharSequence getImeActionLabel() {
-		return mImeActionLabel;
+		return mInputContentInfo.imeActionLabel;
 	}
 
 	public int getImeActionId() {
-		return mImeActionId;
+		return mInputContentInfo.imeActionId;
 	}
 
 	public void setOnEditorActionListener(OnEditorActionListener listener) {
-		mOnEditorActionListener = listener;
+		mInputContentInfo.onEditorActionListener = listener;
 	}
 
 	private InputMethodManager getInputMethodManager() {
@@ -243,10 +251,10 @@ public class PinCodeView extends LinearLayout {
 			return null;
 		}
 
-		outAttrs.inputType = mInputType;
-		outAttrs.imeOptions = mImeOptions;
-		outAttrs.actionLabel = mImeActionLabel;
-		outAttrs.actionId = mImeActionId;
+		outAttrs.inputType = mInputContentInfo.inputType;
+		outAttrs.imeOptions = mInputContentInfo.imeOptions;
+		outAttrs.actionLabel = mInputContentInfo.imeActionLabel;
+		outAttrs.actionId = mInputContentInfo.imeActionId;
 		outAttrs.initialSelStart = Selection.getSelectionStart(mPinText.getText());
 		outAttrs.initialSelEnd = Selection.getSelectionEnd(mPinText.getText());
 
@@ -276,10 +284,8 @@ public class PinCodeView extends LinearLayout {
 
 	public void onEditorAction(int actionId) {
 		Log.d(TAG, "[onEditorAction]");
-		mPinText.onEditorAction(actionId);
-
-		if (mOnEditorActionListener != null) {
-			if (mOnEditorActionListener.onEditorAction(this, actionId, null)) {
+		if (mInputContentInfo.onEditorActionListener != null) {
+			if (mInputContentInfo.onEditorActionListener.onEditorAction(this, actionId, null)) {
 				return;
 			}
 		}
@@ -373,22 +379,21 @@ public class PinCodeView extends LinearLayout {
 			 * won't do anything in this case.)
 			 */
 			if (!hasOnClickListeners()) {
-				if (onCheckIsTextEditor()) {
-					InputMethodManager imm = getInputMethodManager();
-					if (imm != null) {
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-							imm.viewClicked(this);
-						}
-						imm.showSoftInput(this, 0);
+				InputMethodManager imm = getInputMethodManager();
+				if (imm != null) {
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+						imm.viewClicked(this);
 					}
+					imm.showSoftInput(this, 0);
 				}
 			}
 			return super.onKeyUp(keyCode, event);
 
 		case KeyEvent.KEYCODE_ENTER:
-			if (mOnEditorActionListener != null && enterDown) {
-				enterDown = false;
-				if (mOnEditorActionListener.onEditorAction(this, EditorInfo.IME_NULL, event)) {
+			if (mInputContentInfo.onEditorActionListener != null && mInputContentInfo.enterDown) {
+				mInputContentInfo.enterDown = false;
+				if (mInputContentInfo.onEditorActionListener.onEditorAction(this,
+						EditorInfo.IME_NULL, event)) {
 					return true;
 				}
 			}
@@ -492,10 +497,11 @@ public class PinCodeView extends LinearLayout {
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_ENTER:
 			// If there is an action listener, given it a chance to consume the event.
-			if (mOnEditorActionListener != null
-					&& mOnEditorActionListener.onEditorAction(this, EditorInfo.IME_NULL, event)) {
-				enterDown = true;
-				return -1; // consumed
+			if (mInputContentInfo.onEditorActionListener != null) {
+				if (mInputContentInfo.onEditorActionListener.onEditorAction(this,
+						EditorInfo.IME_NULL, event)) {
+					return -1; // consumed
+				}
 			}
 
 			if (hasOnClickListeners()) {
