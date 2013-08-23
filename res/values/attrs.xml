@@ -7,10 +7,8 @@
 
         <!-- the length of the pin -->
         <attr name="pinLength" format="integer" />
-        <!-- drawable to use for empty pin squares -->
-        <attr name="emptyDrawable" format="reference|color" />
-        <!-- drawable to use for filled pin squares -->
-        <attr name="filledDrawable" format="reference|color" />
+        <!-- drawable to use for the pin indicators -->
+        <attr name="pinIndicatorDrawable" format="reference|color" />
         <!-- drawable to use for the background of the pin indicators -->
         <attr name="pinIndicatorBackground" format="reference|color" />
         <!-- the type of characters to accept -->

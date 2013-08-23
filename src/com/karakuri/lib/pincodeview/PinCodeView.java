@@ -3,6 +3,7 @@ package com.karakuri.lib.pincodeview;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -43,6 +44,8 @@ public class PinCodeView extends LinearLayout {
 
 	private TextView mPinText;
 	private int mMaxPinLength;
+	private Drawable mIndicatorDrawable;
+	private Drawable mIndicatorBackground;
 
 	// for backwards compatible hasOnClickListeners
 	private OnClickListener mOnClickListener;
@@ -79,7 +82,7 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	public PinCodeView(Context context) {
-		super(context);
+		this(context, null);
 	}
 
 	public PinCodeView(Context context, AttributeSet attrs) {
@@ -123,6 +126,12 @@ public class PinCodeView extends LinearLayout {
 				case R.styleable.PinCodeView_android_imeActionId:
 					mInputContentInfo.imeActionId = a.getInt(attr, 0);
 					break;
+				case R.styleable.PinCodeView_pinIndicatorDrawable:
+					mIndicatorDrawable = a.getDrawable(attr);
+					break;
+				case R.styleable.PinCodeView_pinIndicatorBackground:
+					mIndicatorBackground = a.getDrawable(attr);
+					break;
 				}
 			}
 		} finally {
@@ -153,6 +162,10 @@ public class PinCodeView extends LinearLayout {
 			Log.d(TAG, String.format("[afterTextChanged] s = \"%s\"", s));
 		}
 	};
+	
+	public CharSequence getPin() {
+		return mPinText.getText();
+	}
 
 	public void setMaxPinLength(int newLength) {
 		if (mMaxPinLength != newLength) {
@@ -164,15 +177,27 @@ public class PinCodeView extends LinearLayout {
 				mPinText.setText(text.subSequence(0, newLength));
 				Selection.setSelection(mPinText.getEditableText(), newLength);
 			}
+			
+			// TODO recreate child views
 		}
 	}
 
 	public int getMaxPinLength() {
 		return mMaxPinLength;
 	}
-
-	public CharSequence getPin() {
-		return mPinText.getText();
+	
+	public void setPinIndicatorDrawable(Drawable d) {
+		if (mIndicatorDrawable != d) {
+			mIndicatorDrawable = d;
+			// TODO refresh indicators
+		}
+	}
+	
+	public void setPinIndicatorBackground(Drawable d) {
+		if (mIndicatorBackground != d) {
+			mIndicatorBackground = d;
+			// TODO refresh indicators
+		}
 	}
 
 	public void setInputType(int inputType) {
@@ -195,8 +220,7 @@ public class PinCodeView extends LinearLayout {
 		mInputContentInfo.inputType = input.getInputType();
 		mPinText.setKeyListener(input);
 
-		InputMethodManager imm = (InputMethodManager) getContext().getSystemService(
-				Context.INPUT_METHOD_SERVICE);
+		InputMethodManager imm = getInputMethodManager();
 		if (imm != null) imm.restartInput(this);
 	}
 
