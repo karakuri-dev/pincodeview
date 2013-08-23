@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -614,5 +615,45 @@ public class PinCodeView extends LinearLayout {
 			}
 		};
 		// @formatter:on
+	}
+	
+	private static class PinIndicator extends ImageView {
+		private static final int[] STATE_EMPTY = {android.R.attr.state_empty};
+		private static final int[] STATE_ACTIVE = {android.R.attr.state_active};
+		
+		private boolean mIsEmpty;
+		private boolean mIsActive;
+
+		public PinIndicator(Context context) {
+			super(context);
+		}
+		
+		public PinIndicator(Context context, AttributeSet attrs) {
+			super(context, attrs);
+		}
+
+		public PinIndicator(Context context, AttributeSet attrs, int defStyle) {
+			super(context, attrs, defStyle);
+		}
+		
+		public void setIsEmpty(boolean isEmpty) {
+			mIsEmpty = isEmpty;
+		}
+		
+		public void setIsActive(boolean isActive) {
+			mIsActive = isActive;
+		}
+		
+		@Override
+		public int[] onCreateDrawableState(int extraSpace) {
+			int[] state = super.onCreateDrawableState(extraSpace + 2);
+			if (mIsEmpty) {
+				mergeDrawableStates(state, STATE_EMPTY);
+			}
+			if (mIsActive) {
+				mergeDrawableStates(state, STATE_ACTIVE);
+			}
+			return state;
+		}
 	}
 }
