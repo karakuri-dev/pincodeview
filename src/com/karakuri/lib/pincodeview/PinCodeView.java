@@ -156,9 +156,9 @@ public class PinCodeView extends LinearLayout {
 		mPinText = new TextView(context);
 		mPinText.addTextChangedListener(mPinTextWatcher);
 
-		setMaxPinLength(maxPinLength);
 		setInputType(inputType);
 		setImeOptions(imeOptions);
+		setMaxPinLength(maxPinLength);
 
 		setClickable(true);
 		setFocusableInTouchMode(true);
@@ -175,9 +175,45 @@ public class PinCodeView extends LinearLayout {
 		@Override
 		public void afterTextChanged(Editable s) {
 			Log.d(TAG, String.format("[afterTextChanged] s = \"%s\"", s));
+			updateIndicators();
 		}
 	};
-	
+
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+	private void createChildViews() {
+		removeAllViews();
+
+		Context context = getContext();
+		LayoutParams params = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1);
+		for (int i = 0; i < mMaxPinLength; i++) {
+			PinIndicator child = new PinIndicator(context);
+			child.setImageDrawable(mIndicatorDrawable);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+				child.setBackground(mIndicatorBackground);				
+			} else {
+				child.setBackgroundDrawable(mIndicatorBackground);
+			}
+			
+			addView(child, params);
+		}
+		
+		updateIndicators();
+	}
+
+	private void updateIndicators() {
+		final int length = mPinText.getText().length();
+		for (int i = 0; i < mMaxPinLength; i++) {
+			View child = getChildAt(i);
+			if (!(child instanceof PinIndicator)) {
+				throw new IllegalStateException("PinCodeView cannot have other child views.");
+			}
+			
+			PinIndicator indicator = (PinIndicator) child;
+			indicator.setIsEmpty(i < length);
+			indicator.setIsActive(i == length);
+		}
+	}
+
 	public CharSequence getPin() {
 		return mPinText.getText();
 	}
@@ -192,22 +228,22 @@ public class PinCodeView extends LinearLayout {
 				mPinText.setText(text.subSequence(0, newLength));
 				Selection.setSelection(mPinText.getEditableText(), newLength);
 			}
-			
-			// TODO recreate child views
+
+			createChildViews();
 		}
 	}
 
 	public int getMaxPinLength() {
 		return mMaxPinLength;
 	}
-	
+
 	public void setPinIndicatorDrawable(Drawable d) {
 		if (mIndicatorDrawable != d) {
 			mIndicatorDrawable = d;
 			// TODO refresh indicators
 		}
 	}
-	
+
 	public void setPinIndicatorBackground(Drawable d) {
 		if (mIndicatorBackground != d) {
 			mIndicatorBackground = d;
@@ -655,18 +691,18 @@ public class PinCodeView extends LinearLayout {
 		};
 		// @formatter:on
 	}
-	
+
 	private static class PinIndicator extends ImageView {
-		private static final int[] STATE_EMPTY = {android.R.attr.state_empty};
-		private static final int[] STATE_ACTIVE = {android.R.attr.state_active};
-		
+		private static final int[] STATE_EMPTY = { android.R.attr.state_empty };
+		private static final int[] STATE_ACTIVE = { android.R.attr.state_active };
+
 		private boolean mIsEmpty;
 		private boolean mIsActive;
 
 		public PinIndicator(Context context) {
 			super(context);
 		}
-		
+
 		public PinIndicator(Context context, AttributeSet attrs) {
 			super(context, attrs);
 		}
@@ -674,15 +710,15 @@ public class PinCodeView extends LinearLayout {
 		public PinIndicator(Context context, AttributeSet attrs, int defStyle) {
 			super(context, attrs, defStyle);
 		}
-		
+
 		public void setIsEmpty(boolean isEmpty) {
 			mIsEmpty = isEmpty;
 		}
-		
+
 		public void setIsActive(boolean isActive) {
 			mIsActive = isActive;
 		}
-		
+
 		@Override
 		public int[] onCreateDrawableState(int extraSpace) {
 			int[] state = super.onCreateDrawableState(extraSpace + 2);
