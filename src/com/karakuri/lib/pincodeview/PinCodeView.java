@@ -244,14 +244,37 @@ public class PinCodeView extends LinearLayout {
 	public void setPinIndicatorDrawable(Drawable d) {
 		if (mIndicatorDrawable != d) {
 			mIndicatorDrawable = d;
-			// TODO refresh indicators
+
+			final int count = getChildCount();
+			for (int i = 0; i < count; i++) {
+				View child = getChildAt(i);
+				if (!(child instanceof PinIndicator)) {
+					throw new IllegalStateException("PinCodeView cannot have other child views.");
+				}
+
+				((PinIndicator) child).setImageDrawable(d);
+			}
 		}
 	}
 
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	public void setPinIndicatorBackground(Drawable d) {
 		if (mIndicatorBackground != d) {
 			mIndicatorBackground = d;
-			// TODO refresh indicators
+
+			final int count = getChildCount();
+			for (int i = 0; i < count; i++) {
+				View child = getChildAt(i);
+				if (!(child instanceof PinIndicator)) {
+					throw new IllegalStateException("PinCodeView cannot have other child views.");
+				}
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+					child.setBackground(mIndicatorBackground);
+				} else {
+					child.setBackgroundDrawable(mIndicatorBackground);
+				}
+			}
 		}
 	}
 
