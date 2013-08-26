@@ -5,7 +5,7 @@
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
  * 
- * 		http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -41,7 +41,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import com.karakuri.lib.pincodeview.PinKeyListener.Type;
 
 /**
@@ -371,8 +370,8 @@ public class PinCodeView extends LinearLayout {
 		if ((outAttrs.imeOptions & EditorInfo.IME_MASK_ACTION) 
 				== EditorInfo.IME_ACTION_UNSPECIFIED) {
 			if ((outAttrs.imeOptions & EditorInfo.IME_FLAG_NAVIGATE_NEXT) != 0) {
-				// An action has not been set, but the enter key will move to the next focus, so set
-				// the editor action to that.
+				// An action has not been set, but the enter key will move to
+				// the next focus, so set the editor action to that.
 				outAttrs.imeOptions |= EditorInfo.IME_ACTION_NEXT;
 			} else {
 				// An action has not been set and there is no focus to move to
@@ -745,10 +744,12 @@ public class PinCodeView extends LinearLayout {
 
 		public void setIsEmpty(boolean isEmpty) {
 			mIsEmpty = isEmpty;
+			refreshDrawableState();
 		}
 
 		public void setIsActive(boolean isActive) {
 			mIsActive = isActive;
+			refreshDrawableState();
 		}
 
 		@Override
