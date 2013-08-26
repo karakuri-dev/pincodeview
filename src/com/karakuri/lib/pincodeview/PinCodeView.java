@@ -1,17 +1,17 @@
 /*
  * Copyright (C) 2013 Karakuri <karakuri.dev@gmail.com>
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  * 
  * 		http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.karakuri.lib.pincodeview;
 
@@ -77,7 +77,8 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	/**
-	 * Interface definition for a callback to be invoked when an action is performed on the editor.
+	 * Interface definition for a callback to be invoked when an action is
+	 * performed on the editor.
 	 */
 	public interface OnEditorActionListener {
 		/**
@@ -86,12 +87,15 @@ public class PinCodeView extends LinearLayout {
 		 * @param view
 		 *            The view for which the editor action was invoked
 		 * @param actionId
-		 *            Identifier of the action. This will be either the identifier you supplied, or
-		 *            {@link EditorInfo#IME_NULL EditorInfo.IME_NULL} if being called due to the
-		 *            enter key being pressed.
+		 *            Identifier of the action. This will be either the
+		 *            identifier you supplied, or {@link EditorInfo#IME_NULL
+		 *            EditorInfo.IME_NULL} if being called due to the enter key
+		 *            being pressed.
 		 * @param event
-		 *            If triggered by an enter key, this is the event; otherwise, this is null.
-		 * @return Return true if you have consumed the action, else return false
+		 *            If triggered by an enter key, this is the event;
+		 *            otherwise, this is null.
+		 * @return Return true if you have consumed the action, else return
+		 *         false
 		 */
 		public boolean onEditorAction(PinCodeView view, int actionId, KeyEvent event);
 	}
@@ -189,14 +193,14 @@ public class PinCodeView extends LinearLayout {
 			PinIndicator child = new PinIndicator(context);
 			child.setImageDrawable(mIndicatorDrawable);
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-				child.setBackground(mIndicatorBackground);				
+				child.setBackground(mIndicatorBackground);
 			} else {
 				child.setBackgroundDrawable(mIndicatorBackground);
 			}
-			
+
 			addView(child, params);
 		}
-		
+
 		updateIndicators();
 	}
 
@@ -207,7 +211,7 @@ public class PinCodeView extends LinearLayout {
 			if (!(child instanceof PinIndicator)) {
 				throw new IllegalStateException("PinCodeView cannot have other child views.");
 			}
-			
+
 			PinIndicator indicator = (PinIndicator) child;
 			indicator.setIsEmpty(i < length);
 			indicator.setIsActive(i == length);
@@ -450,9 +454,10 @@ public class PinCodeView extends LinearLayout {
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_DPAD_CENTER:
 			/*
-			 * If there is a click listener, just call through to super, which will invoke it. If
-			 * not, try to show the soft input method. (It will also call performClick(), but that
-			 * won't do anything in this case.)
+			 * If there is a click listener, just call through to super, which
+			 * will invoke it. If not, try to show the soft input method. (It
+			 * will also call performClick(), but that won't do anything in this
+			 * case.)
 			 */
 			if (!hasOnClickListeners()) {
 				InputMethodManager imm = getInputMethodManager();
@@ -476,10 +481,11 @@ public class PinCodeView extends LinearLayout {
 
 			if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 || true) {
 				/*
-				 * If there is a click listener, just call through to super, which will invoke it.
-				 * If not, try to advance focus, but still call through to super, which will reset
-				 * the pressed state and longpress state. (It will also call performClick(), but
-				 * that won't do anything in this case.)
+				 * If there is a click listener, just call through to super,
+				 * which will invoke it. If not, try to advance focus, but still
+				 * call through to super, which will reset the pressed state and
+				 * longpress state. (It will also call performClick(), but that
+				 * won't do anything in this case.)
 				 */
 				if (!hasOnClickListeners()) {
 					View v = focusSearch(FOCUS_DOWN);
@@ -491,11 +497,13 @@ public class PinCodeView extends LinearLayout {
 						}
 
 						// Return true because we handled the key
-						// Super will return false because there was no click listener.
+						// Super will return false because there was no click
+						// listener.
 						super.onKeyUp(keyCode, event);
 						return true;
 					} else if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0) {
-						// No target for next focus, but make sure the IME is hidden
+						// No target for next focus, but make sure the IME is
+						// hidden
 						// if this came from it.
 						InputMethodManager imm = getInputMethodManager();
 						if (imm != null && imm.isActive(this)) {
@@ -572,7 +580,8 @@ public class PinCodeView extends LinearLayout {
 
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_ENTER:
-			// If there is an action listener, given it a chance to consume the event.
+			// If there is an action listener, given it a chance to consume the
+			// event.
 			if (mInputContentInfo.onEditorActionListener != null) {
 				if (mInputContentInfo.onEditorActionListener.onEditorAction(this,
 						EditorInfo.IME_NULL, event)) {
