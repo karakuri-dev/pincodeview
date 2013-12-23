@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2013 Karakuri <karakuri.dev@gmail.com>
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -41,6 +41,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import com.karakuri.lib.pincodeview.PinKeyListener.Type;
 
 /**
@@ -82,7 +83,7 @@ public class PinCodeView extends LinearLayout {
 	public interface OnEditorActionListener {
 		/**
 		 * Called when an action is being performed.
-		 * 
+		 *
 		 * @param view
 		 *            The view for which the editor action was invoked
 		 * @param actionId
@@ -367,7 +368,7 @@ public class PinCodeView extends LinearLayout {
 			outAttrs.imeOptions |= EditorInfo.IME_FLAG_NAVIGATE_PREVIOUS;
 		}
 		// @formatter:off
-		if ((outAttrs.imeOptions & EditorInfo.IME_MASK_ACTION) 
+		if ((outAttrs.imeOptions & EditorInfo.IME_MASK_ACTION)
 				== EditorInfo.IME_ACTION_UNSPECIFIED) {
 			if ((outAttrs.imeOptions & EditorInfo.IME_FLAG_NAVIGATE_NEXT) != 0) {
 				// An action has not been set, but the enter key will move to
@@ -646,6 +647,12 @@ public class PinCodeView extends LinearLayout {
 		}
 
 		return 0; // dispatch to super
+	}
+
+	@Override
+	public void setOnClickListener(OnClickListener listener) {
+	    super.setOnClickListener(listener);
+	    mOnClickListener = listener;
 	}
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
