@@ -338,7 +338,7 @@ public class PinCodeView extends LinearLayout {
 		return true;
 	}
 
-	public TextView getInputTextView() {
+	/*package*/ TextView getInputTextView() {
 		return mPinText;
 	}
 
@@ -382,7 +382,7 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public void onEditorAction(int actionId) {
+	/*package*/ void onEditorAction(int actionId) {
 		Log.d(TAG, "[onEditorAction]");
 		if (mInputContentInfo.onEditorActionListener != null) {
 			if (mInputContentInfo.onEditorActionListener.onEditorAction(this, actionId, null)) {
@@ -433,12 +433,12 @@ public class PinCodeView extends LinearLayout {
 		// @formatter:on
 	}
 
-	public void onPrivateIMECommand(String action, Bundle data) {
+	/*package*/ void onPrivateIMECommand(String action, Bundle data) {
 		Log.d(TAG, "[onPrivateIMECommand]");
 		mPinText.onPrivateIMECommand(action, data);
 	}
 
-	public KeyListener getKeyListener() {
+	/*package*/ KeyListener getKeyListener() {
 		Log.d(TAG, "[getKeyListener]");
 		return mPinText.getKeyListener();
 	}
