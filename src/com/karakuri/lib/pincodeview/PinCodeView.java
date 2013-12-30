@@ -211,8 +211,20 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
-	public CharSequence getPin() {
-		return mPinText.getText();
+	public String getPin() {
+		return mPinText.getText().toString();
+	}
+
+	public int getPinLength() {
+		return mPinText.getText().length();
+	}
+
+	public boolean isPinEmpty() {
+		return getPinLength() == 0;
+	}
+
+	public boolean isPinFilled() {
+		return getPinLength() == mMaxPinLength;
 	}
 
 	public void setMaxPinLength(int newLength) {
@@ -250,6 +262,10 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
+	public Drawable getPinIndicatorDrawable() {
+		return mIndicatorDrawable;
+	}
+
 	@SuppressWarnings("deprecation")
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	public void setPinIndicatorBackground(Drawable d) {
@@ -270,6 +286,10 @@ public class PinCodeView extends LinearLayout {
 				}
 			}
 		}
+	}
+
+	public Drawable getPinIndicatorBackground() {
+		return mIndicatorBackground;
 	}
 
 	public void setInputType(int inputType) {
