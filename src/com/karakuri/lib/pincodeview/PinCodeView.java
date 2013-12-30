@@ -1,20 +1,19 @@
 /*
  * Copyright (C) 2013 Karakuri <karakuri.dev@gmail.com>
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
 package com.karakuri.lib.pincodeview;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -77,25 +76,18 @@ public class PinCodeView extends LinearLayout {
 	}
 
 	/**
-	 * Interface definition for a callback to be invoked when an action is
-	 * performed on the editor.
+	 * Interface definition for a callback to be invoked when an action is performed on the editor.
 	 */
 	public interface OnEditorActionListener {
 		/**
 		 * Called when an action is being performed.
 		 *
-		 * @param view
-		 *            The view for which the editor action was invoked
-		 * @param actionId
-		 *            Identifier of the action. This will be either the
-		 *            identifier you supplied, or {@link EditorInfo#IME_NULL
-		 *            EditorInfo.IME_NULL} if being called due to the enter key
-		 *            being pressed.
-		 * @param event
-		 *            If triggered by an enter key, this is the event;
-		 *            otherwise, this is null.
-		 * @return Return true if you have consumed the action, else return
-		 *         false
+		 * @param view The view for which the editor action was invoked
+		 * @param actionId Identifier of the action. This will be either the identifier you
+		 *            supplied, or {@link EditorInfo#IME_NULL EditorInfo.IME_NULL} if being called
+		 *            due to the enter key being pressed.
+		 * @param event If triggered by an enter key, this is the event; otherwise, this is null.
+		 * @return Return true if you have consumed the action, else return false
 		 */
 		public boolean onEditorAction(PinCodeView view, int actionId, KeyEvent event);
 	}
@@ -183,6 +175,7 @@ public class PinCodeView extends LinearLayout {
 		}
 	};
 
+	@SuppressWarnings("deprecation")
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	private void createChildViews() {
 		removeAllViews();
@@ -257,6 +250,7 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	public void setPinIndicatorBackground(Drawable d) {
 		if (mIndicatorBackground != d) {
@@ -306,6 +300,7 @@ public class PinCodeView extends LinearLayout {
 		return mInputContentInfo.inputType;
 	}
 
+	@SuppressLint("InlinedApi")
 	public void setImeOptions(int options) {
 		// try to prevent the IME from hiding the view in landscape
 		options = options | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
@@ -347,6 +342,7 @@ public class PinCodeView extends LinearLayout {
 		return mPinText;
 	}
 
+	@SuppressLint("InlinedApi")
 	@Override
 	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
 		Log.d(TAG, "[onCreateInputConnection]");
@@ -385,6 +381,7 @@ public class PinCodeView extends LinearLayout {
 		return connection;
 	}
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onEditorAction(int actionId) {
 		Log.d(TAG, "[onEditorAction]");
 		if (mInputContentInfo.onEditorActionListener != null) {
@@ -477,10 +474,9 @@ public class PinCodeView extends LinearLayout {
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_DPAD_CENTER:
 			/*
-			 * If there is a click listener, just call through to super, which
-			 * will invoke it. If not, try to show the soft input method. (It
-			 * will also call performClick(), but that won't do anything in this
-			 * case.)
+			 * If there is a click listener, just call through to super, which will invoke it. If
+			 * not, try to show the soft input method. (It will also call performClick(), but that
+			 * won't do anything in this case.)
 			 */
 			if (!hasOnClickListeners()) {
 				InputMethodManager imm = getInputMethodManager();
@@ -504,11 +500,10 @@ public class PinCodeView extends LinearLayout {
 
 			if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 || true) {
 				/*
-				 * If there is a click listener, just call through to super,
-				 * which will invoke it. If not, try to advance focus, but still
-				 * call through to super, which will reset the pressed state and
-				 * longpress state. (It will also call performClick(), but that
-				 * won't do anything in this case.)
+				 * If there is a click listener, just call through to super, which will invoke it.
+				 * If not, try to advance focus, but still call through to super, which will reset
+				 * the pressed state and longpress state. (It will also call performClick(), but
+				 * that won't do anything in this case.)
 				 */
 				if (!hasOnClickListeners()) {
 					View v = focusSearch(FOCUS_DOWN);
@@ -520,8 +515,7 @@ public class PinCodeView extends LinearLayout {
 						}
 
 						// Return true because we handled the key
-						// Super will return false because there was no click
-						// listener.
+						// Super will return false because there was no click listener.
 						super.onKeyUp(keyCode, event);
 						return true;
 					} else if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0) {
@@ -651,8 +645,8 @@ public class PinCodeView extends LinearLayout {
 
 	@Override
 	public void setOnClickListener(OnClickListener listener) {
-	    super.setOnClickListener(listener);
-	    mOnClickListener = listener;
+		super.setOnClickListener(listener);
+		mOnClickListener = listener;
 	}
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
@@ -750,13 +744,17 @@ public class PinCodeView extends LinearLayout {
 		}
 
 		public void setIsEmpty(boolean isEmpty) {
-			mIsEmpty = isEmpty;
-			refreshDrawableState();
+			if (mIsEmpty != isEmpty) {
+				mIsEmpty = isEmpty;
+				refreshDrawableState();
+			}
 		}
 
 		public void setIsActive(boolean isActive) {
-			mIsActive = isActive;
-			refreshDrawableState();
+			if (mIsActive != isActive) {
+				mIsActive = isActive;
+				refreshDrawableState();
+			}
 		}
 
 		@Override
