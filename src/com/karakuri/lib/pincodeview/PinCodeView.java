@@ -52,8 +52,11 @@ public class PinCodeView extends LinearLayout {
 	private static final int DEFAULT_PIN_LENGTH = 4;
 
 	/* values matching enum for R.styleable.PinCodeView_inputType */
+	/** Input type for pins composed only of numbers. */
 	public static final int INPUT_TYPE_NUMERIC = 1;
+	/** Input type for pins composed only of letters. */
 	public static final int INPUT_TYPE_ALPHA = 2;
+	/** Input type for pins composed of letters and numbers. */
 	public static final int INPUT_TYPE_ALPHA_NUMERIC = 3;
 
 	private TextView mPinText;
@@ -211,22 +214,44 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
+	/**
+	 * Get the currently entered pin text.
+	 */
 	public String getPin() {
 		return mPinText.getText().toString();
 	}
 
+	/**
+	 * Get the length of the currently entered pin text (rather than the max length allowed by this
+	 * PinCodeView). Clients may find this useful if a pin shorter than the max allowed length is
+	 * acceptable input, otherwise you can use {@link #isPinFilled()}.
+	 */
 	public int getPinLength() {
 		return mPinText.getText().length();
 	}
 
+	/**
+	 * Returns true if the current pin text is empty, false otherwise.
+	 */
 	public boolean isPinEmpty() {
 		return getPinLength() == 0;
 	}
 
+	/**
+	 * Returns true if the current pin text fills the available indicators, false otherwise.
+	 */
 	public boolean isPinFilled() {
 		return getPinLength() == mMaxPinLength;
 	}
 
+	/**
+	 * Set the maximum pin length allowed. This will update the number of indicators shown by this
+	 * view. The current pin text will be maintained, but it will be truncated if it exceeds the new
+	 * maximum.
+	 *
+	 * @see #getMaxPinLength()
+	 * @attr {@link R.styleable#PinCodeView_pinLength}
+	 */
 	public void setMaxPinLength(int newLength) {
 		if (mMaxPinLength != newLength) {
 			mMaxPinLength = newLength;
@@ -242,10 +267,21 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
+	/**
+	 * Get the maximum pin length allowed. This is equal to the number of indicators shown.
+	 *
+	 * @see #getMaxPinLength()
+	 */
 	public int getMaxPinLength() {
 		return mMaxPinLength;
 	}
 
+	/**
+	 * Set the {@link Drawable} used for the pin indicators.
+	 *
+	 * @see #getPinIndicatorDrawable()
+	 * @attr {@link R.styleable#PinCodeView_pinIndicatorDrawable}
+	 */
 	public void setPinIndicatorDrawable(Drawable d) {
 		if (mIndicatorDrawable != d) {
 			mIndicatorDrawable = d;
@@ -262,10 +298,21 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
+	/**
+	 * Get the current pin indicator drawable.
+	 *
+	 * @see #setPinIndicatorDrawable(Drawable)
+	 */
 	public Drawable getPinIndicatorDrawable() {
 		return mIndicatorDrawable;
 	}
 
+	/**
+	 * Set the background {@link Drawable} used for the pin indicators.
+	 *
+	 * @see #getPinIndicatorBackground()
+	 * @attr {@link R.styleable#PinCodeView_pinIndicatorBackground}
+	 */
 	@SuppressWarnings("deprecation")
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	public void setPinIndicatorBackground(Drawable d) {
@@ -288,10 +335,22 @@ public class PinCodeView extends LinearLayout {
 		}
 	}
 
+	/**
+	 * Get the current pin indicator background drawable.
+	 *
+	 * @see #setPinIndicatorBackground(Drawable)
+	 */
 	public Drawable getPinIndicatorBackground() {
 		return mIndicatorBackground;
 	}
 
+	/**
+	 * Set the type of character accepted by this view. Must be one of {@link #INPUT_TYPE_NUMERIC},
+	 * {@link #INPUT_TYPE_ALPHA}, or {@link #INPUT_TYPE_ALPHA_NUMERIC}.
+	 *
+	 * @see #getInputType()
+	 * @attr {@link R.styleable#PinCodeView_inputType}
+	 */
 	public void setInputType(int inputType) {
 		PinKeyListener input;
 		switch (inputType) {
@@ -316,10 +375,24 @@ public class PinCodeView extends LinearLayout {
 		if (imm != null) imm.restartInput(this);
 	}
 
+	/**
+	 * Get the type of character accepted by this view. This value should be one of
+	 * {@link #INPUT_TYPE_NUMERIC}, {@link #INPUT_TYPE_ALPHA}, or {@link #INPUT_TYPE_ALPHA_NUMERIC}.
+	 *
+	 * @see #setInputType(int)
+	 */
 	public int getInputType() {
 		return mInputContentInfo.inputType;
 	}
 
+	/**
+	 * Set the editor type integer associated with this view, which will be reported to an IME with
+	 * {@link EditorInfo#imeOptions} when it has focus.
+	 *
+	 * @see #getImeOptions
+	 * @see android.view.inputmethod.EditorInfo
+	 * @attr {@link android.R.styleable#TextView_imeOptions}
+	 */
 	@SuppressLint("InlinedApi")
 	public void setImeOptions(int options) {
 		// try to prevent the IME from hiding the view in landscape
@@ -327,23 +400,57 @@ public class PinCodeView extends LinearLayout {
 		mInputContentInfo.imeOptions = options;
 	}
 
+	/**
+     * Get the editor type integer associated with this view.
+     *
+     * @see #setImeOptions(int)
+     * @see android.view.inputmethod.EditorInfo
+     */
 	public int getImeOptions() {
 		return mInputContentInfo.imeOptions;
 	}
 
+	/**
+     * Set the custom IME action associated with this view, which
+     * will be reported to an IME with {@link EditorInfo#actionLabel}
+     * and {@link EditorInfo#actionId} when it has focus.
+     *
+     * @see #getImeActionLabel
+     * @see #getImeActionId
+     * @see android.view.inputmethod.EditorInfo
+     * @attr {@link android.R.styleable#TextView_imeActionLabel}
+     * @attr {@link android.R.styleable#TextView_imeActionId}
+     */
 	public void setImeActionLabel(CharSequence label, int actionId) {
 		mInputContentInfo.imeActionLabel = label;
 		mInputContentInfo.imeActionId = actionId;
 	}
 
+	/**
+     * Get the IME action label previous set with {@link #setImeActionLabel}.
+     *
+     * @see #setImeActionLabel
+     * @see android.view.inputmethod.EditorInfo
+     */
 	public CharSequence getImeActionLabel() {
 		return mInputContentInfo.imeActionLabel;
 	}
 
+	/**
+     * Get the IME action ID previous set with {@link #setImeActionLabel}.
+     *
+     * @see #setImeActionLabel
+     * @see android.view.inputmethod.EditorInfo
+     */
 	public int getImeActionId() {
 		return mInputContentInfo.imeActionId;
 	}
 
+	/**
+	 * Set a special listener to be called when an action is performed on this view. This will be
+	 * called when the enter key is pressed, or when an action supplied to the IME is selected by
+	 * the user.
+	 */
 	public void setOnEditorActionListener(OnEditorActionListener listener) {
 		mInputContentInfo.onEditorActionListener = listener;
 	}

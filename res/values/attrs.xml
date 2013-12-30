@@ -17,6 +17,7 @@
             <enum name="alpha" value="2" />
             <enum name="alphaNumeric" value="3" />
         </attr>
+        <!-- these Android-namespaced attributes can be used in your layout files -->
         <attr name="android:imeOptions" />
         <attr name="android:imeActionLabel" />
         <attr name="android:imeActionId" />
